@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum payment_statuses {
+  intent_created
+  succeed
+  failed
+  cancel
+}
+
+model role {
+  id         String    @id @default(uuid())
+  name       String
+  created_at DateTime  @default(now())
+  updated_at DateTime? @default(now()) @updatedAt
+  users      user[]
+}
+
+model user {
+  id                 String             @id @default(uuid())
+  role_id            String?
+  email              String             @unique
+  phone              String?
+  first_name         String?
+  last_name          String?
+  username           String?            @unique
+  password           String?
+  otp                Int?
+  otp_date           Int?
+  revenue            Int?
+  is_email_verified  Boolean            @default(false)
+  created_at         DateTime           @default(now())
+  updated_at         DateTime?          @default(now()) @updatedAt
+  purchase_histories purchase_history[]
+  ratings            rating?
+  reviews            review?
+  role               role?              @relation(fields: [role_id], references: [id])
+  authord_books      user_book[]
+}
+
+model book {
+  id               String             @id @default(uuid())
+  title            String             @unique()
+  description      String
+  price            Int
+  sell_count       Int                @default(0)
+  created_at       DateTime           @default(now())
+  updated_at       DateTime?          @default(now()) @updatedAt
+  ratings          rating?
+  reviews          review?            @relation(fields: [reviewId], references: [id])
+  purchase_history purchase_history[]
+  reviewId         Int?
+  authors          user_book[]
+}
+
+model user_book {
+  userId    String
+  bookId    String
+  createdAt DateTime @default(now())
+  user      user     @relation(fields: [userId], references: [id])
+  book      book     @relation(fields: [bookId], references: [id])
+
+  @@id([userId, bookId])
+}
+
+model purchase_history {
+  id                  Int              @id @default(autoincrement())
+  purchase_id         String          
+  book_id             String
+  user_id             String
+  purchase_date       DateTime         @default(now())
+  status              payment_statuses @default(intent_created)
+  price_at_purchasing Int
+  quantity            Int
+  book                book             @relation(fields: [book_id], references: [id])
+  user                user             @relation(fields: [user_id], references: [id])
+}
+
+model rating {
+  id      Int    @id @default(autoincrement())
+  book_id String @unique
+  user_id String @unique
+  rating  Int
+  user    user   @relation(fields: [user_id], references: [id])
+  book    book   @relation(fields: [book_id], references: [id])
+}
+
+model review {
+  id      Int    @id @default(autoincrement())
+  book_id String @unique
+  user_id String @unique
+  review  String
+  user    user   @relation(fields: [user_id], references: [id])
+  book    book[]
+}

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+build/
+.swc/
+.DS_Store
+yarn-error.log
+logs/
+.env
